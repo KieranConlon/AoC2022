@@ -44,3 +44,4 @@ DerivedData/
 # End of https://www.toptal.com/developers/gitignore/api/macos,swiftpm
 n
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/xcshareddata/xcschemes/AoC2022.xcscheme

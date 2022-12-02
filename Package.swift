@@ -21,7 +21,8 @@ let package = Package(
         .target(
             name: "AoC2022",
             dependencies: [],
-            resources: [.process("Resources/D1/inputD1.txt")]
+            resources: [.process("Resources/D1/inputD1.txt"),
+                        .process("Resources/D2/inputD2.txt")]
         ),
         .testTarget(
             name: "AoC2022Tests",
