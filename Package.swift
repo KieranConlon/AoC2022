@@ -4,29 +4,31 @@
 import PackageDescription
 
 let package = Package(
-    name: "AoC2022",
-    products: [
-        // Products define the executables and libraries a package produces, and make them visible to other packages.
-        .library(
-            name: "AoC2022",
-            targets: ["AoC2022"]),
-    ],
-    dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
-        .target(
-            name: "AoC2022",
-            dependencies: [],
-            resources: [.process("Resources/D1/inputD1.txt"),
-                        .process("Resources/D2/inputD2.txt")]
-        ),
-        .testTarget(
-            name: "AoC2022Tests",
-            dependencies: ["AoC2022"]
-        ),
-    ]
+  name: "AoC2022",
+  products: [
+    // Products define the executables and libraries a package produces, and make them visible to other packages.
+    .library(
+      name: "AoC2022",
+      targets: ["AoC2022"]),
+  ],
+  dependencies: [
+    // Dependencies declare other packages that this package depends on.
+    // .package(url: /* package url */, from: "1.0.0"),
+  ],
+  targets: [
+    // Targets are the basic building blocks of a package. A target can define a module or a test suite.
+    // Targets can depend on other targets in this package, and on products in packages this package depends on.
+    .target(
+      name: "AoC2022",
+      dependencies: [],
+      resources: [.process("Resources/D1/inputD1.txt"),
+                  .process("Resources/D2/inputD2.txt"),
+                  .process("Resources/D3/inputD3.txt")
+      ]
+    ),
+    .testTarget(
+      name: "AoC2022Tests",
+      dependencies: ["AoC2022"]
+    ),
+  ]
 )

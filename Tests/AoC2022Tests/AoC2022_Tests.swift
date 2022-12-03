@@ -2,40 +2,60 @@ import XCTest
 @testable import AoC2022
 
 final class AoC2022_Tests: XCTestCase {
-
+  
+  let adventName = "AoC2022"
+  
+  private func printAnswer(day: Int, q1: String = "", a1: String = "", q2: String = "", a2: String = "") {
+    print(
+    """
+    >
+      \(adventName) Day-\(day) Puzzle-1:
+         Q: \(q1)
+         A: \(a1)
+    
+      \(adventName) Day-\(day) Puzzle-2:
+         Q: \(q2)
+         A: \(a2)
+    ------
+    """)
+  }
+  
+  private static let inputFilesPrefix = "/Users/kieran/codeProjects/AoC2022/Sources/AoC2022/Resources"
+  private static let inputFiles: [String: String] = [
+    "d1": "\(inputFilesPrefix)/D1/inputD1.txt",
+    "d2": "\(inputFilesPrefix)/D2/inputD2.txt",
+    "d3": "\(inputFilesPrefix)/D3/inputD3.txt",
+  ]
+  
   func testAoC_D1() throws {
-    let d1Answer = AoC2022_D1(inputFile: "/Users/kieran/codeProjects/AoC2022/Sources/AoC2022/Resources/D1/inputD1.txt")
-
-
-    print("""
-          ---+++
-          AoC2022 Day-1 Part 1:
-              Find the Elf carrying the most Calories.
-              How many total Calories is that Elf carrying?
-                  A: The elf carrying the most food calories has: \(d1Answer.puzzle1) calories.
-
-          AoC2022 Day-1 Part 2:
-              Find the top three Elves carrying the most Calories.
-              How many total Calories those elves carrying in total?
-                  A: Three elves carrying the most food calories have: \(d1Answer.puzzle2) calories.
-          ---+++
-          """)
+    let q1 = "Find the Elf carrying the most Calories.  How many total Calories is that Elf carrying?"
+    let q2 = "Find the top three Elves carrying the most Calories.  How many total Calories those elves carrying in total?"
+    
+    let ans = AoC2022_D1(inputFile: AoC2022_Tests.inputFiles["d1"]!)
+    
+    let a1 = "The elf carrying the most food calories has: \(ans.puzzle1) calories."
+    let a2 = "Three elves carrying the most food calories have: \(ans.puzzle2) calories."
+    printAnswer(day: 1, q1: q1, a1: a1, q2: q2, a2: a2)
   }
   
   func testAoC_D2() throws {
-    let d2Answer = AoC2022_D2(inputFile: "/Users/kieran/codeProjects/AoC2022/Sources/AoC2022/Resources/D2/inputD2.txt")
-
-    print("""
-          ---+++
-          AoC2022 Day-2 Part 1:
-              What would your total score if X=ROCK, Y=PAPER, Z=SCISSORS?
-                  A: Total score is: \(d2Answer.puzzle1) calories.
-
-          AoC2022 Day-2 Part 2:
-              What would your total score be if X=LOSE, Y=DRAW, Z=WIN?
-                  A: Total score is: \(d2Answer.puzzle2) calories.
-          ---+++
-          """)
+    let q1 = "What would your total score if X=ROCK, Y=PAPER, Z=SCISSORS?"
+    let q2 = "What would your total score be if X=LOSE, Y=DRAW, Z=WIN?"
+    
+    let ans = AoC2022_D2(inputFile: AoC2022_Tests.inputFiles["d2"]!)
+    let a1 = "Total score is: \(ans.puzzle1) calories."
+    let a2 = "Total score is: \(ans.puzzle2) calories."
+    printAnswer(day: 2, q1: q1, a1: a1, q2: q2, a2: a2)
+  }
+  
+  func testAoC_D3() throws {
+    let q1 = "Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?"
+    let q2 = "Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?"
+    
+    let ans = AoC2022_D3(inputFile: AoC2022_Tests.inputFiles["d3"]!)
+    let a1 = "Sum of prorities for the items is: \(ans.puzzle1)"
+    let a2 = "\(ans.puzzle2)"
+    printAnswer(day: 3, q1: q1, a1: a1, q2: q2, a2: a2)
   }
 }
 

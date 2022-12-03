@@ -1,3 +1,10 @@
+//
+//  firecrestHORIZON.uk
+//
+//  e-Mail  : kieran.conlon@firecresthorizon.uk
+//  Twitter : @firecrestHRZN and @Kieran_Conlon
+//
+
 import Foundation
 
 struct FoodItem {

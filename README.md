@@ -10,6 +10,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [DAY-2](#day-2)
     - [Puzzle-1: Calculate your ROCK-PAPER-SCISSORS (RPS) score assuming the code file provided contains your opponents shape and your shape for each game in the contest.](#puzzle-1-calculate-your-rock-paper-scissors-rps-score-assuming-the-code-file-provided-contains-your-opponents-shape-and-your-shape-for-each-game-in-the-contest)
     - [Puzzle-2: Calculate your RPS score assuming the code file provided contains your opponents shape and the required outcome for each game in the contest.](#puzzle-2-calculate-your-rps-score-assuming-the-code-file-provided-contains-your-opponents-shape-and-the-required-outcome-for-each-game-in-the-contest)
+  - [DAY-3](#day-3)
+    - [Puzzle-1: Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?](#puzzle-1-find-the-item-type-that-appears-in-both-compartments-of-each-rucksack-what-is-the-sum-of-the-priorities-of-those-item-types)
+    - [Puzzle-2: Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?](#puzzle-2-find-the-item-type-that-corresponds-to-the-badges-of-each-three-elf-group-what-is-the-sum-of-the-priorities-of-those-item-types)
 
 ---
 
@@ -283,3 +286,103 @@ As before, step through the input file, create the rigged games and calculate th
 ```
 
 ---
+
+## DAY-3
+
+### Puzzle-1: Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?
+
+Summary of solution
+- Process the input file line-by-line
+- Split each line in half, store the two blocks of characters as items in each compartment in the rucksack
+- Create a function to calculate each item's priority value
+- Add the priority values
+
+Create some structs, to keep things simple `RucksackItem` is just an alias to `Character`.  
+
+When calculating the rucksack item's priority value is based on the character's ASCii value with approrite offsets such that 'a' = 1, 'b' = 2 etc. and 'A' = 27, 'B' = 28 etc.
+
+``` swift
+typealias RucksackItem = Character
+
+fileprivate let lowercaseOffset = 96
+fileprivate let uppercaseOffset = (64 - 26)
+
+extension RucksackItem {
+  var priority: Int {
+    get { return self.isLowercase ? Int(self.asciiValue!) - lowercaseOffset : Int(self.asciiValue!) - uppercaseOffset }
+  }
+}
+
+struct Rucksack {
+  var compartmentA: [RucksackItem]
+  var compartemntB: [RucksackItem]
+  var items: [RucksackItem] {
+    get {
+      return compartmentA + compartemntB
+    }
+  }
+  
+  var duplicateItem: RucksackItem {
+    get { return Array( Set(compartmentA).intersection(Set(compartemntB)) ).first! }
+  }
+}
+
+struct Expedition {
+  var rucksacks: [Rucksack]
+  
+  init() {
+    self.rucksacks = [Rucksack]()
+  }
+}
+
+```
+
+Create an instance of `Expedition` then loop through the contents of the input file, splitting each line in half, then adding the 'items' to the rucksack.
+
+Getting the sum of all the duplicate items priority values is done simply by calling `reduce` the rucksack array, adding each priority value.
+
+The `Rucksack.duplicateItem` getter does much of the work, by converting the two items arrays to sets, then finding the `Set.intersection` and returning the first (only) value.
+
+
+``` swift
+  var expedition = Expedition()
+  
+  for contents in rawInput {
+    let halfLen = Int(contents.count / 2)
+    let idx = contents.index(contents.startIndex, offsetBy: halfLen)
+    
+    expedition.rucksacks.append(Rucksack(compartmentA: Array(String(contents[..<idx])),
+                                         compartemntB: Array(String(contents[idx...]))))
+  }
+  
+  let prioritySum = expedition.rucksacks.reduce(0) { $0 + $1.duplicateItem.priority}
+```
+
+### Puzzle-2: Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?
+
+To find the common item with each group of three rucksacks,...
+
+- Iterate over the array of rucksacks using a `stride` of 3.  
+- Convert each rucksack contents to a `Set`
+- Use `Set.intersection()` to find the common item.
+- The question tells us there should be only one common item, get the only (i.e. the first) element of the final intersection.
+- As we loop through the rucksack groups, keep a record of the sum of the `groupPrioritySum` values.
+
+``` swift
+  var groupPrioritySum = 0
+  let groupSize = 3
+  var iter = stride(from: expedition.rucksacks.startIndex,
+                    to: expedition.rucksacks.endIndex, by: groupSize).makeIterator()
+  while let n = iter.next() {
+    let e = min(n.advanced(by: groupSize), expedition.rucksacks.endIndex)
+    let group = expedition.rucksacks[n..<e]
+    
+    let s1 = Set(group[n].items)
+    let s2 = Set(group[n+1].items)
+    let s3 = Set(group[n+2].items)
+    
+    let sA = s1.intersection(s2)
+    let sB = sA.intersection(s3)
+    groupPrioritySum += sB.first!.priority
+  }
+```
