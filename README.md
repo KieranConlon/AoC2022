@@ -4,19 +4,22 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
 
 ---
 - [AoC2022](#aoc2022)
-  - [DAY-1](#day-1)
+  - [DAY-1: Calorie Counting](#day-1-calorie-counting)
     - [Puzzle-1: Elf with most food calories.](#puzzle-1-elf-with-most-food-calories)
     - [Puzzle-2: Three Elves with most food calories.](#puzzle-2-three-elves-with-most-food-calories)
-  - [DAY-2](#day-2)
+  - [DAY-2: Rock Paper Scissors](#day-2-rock-paper-scissors)
     - [Puzzle-1: Calculate your ROCK-PAPER-SCISSORS (RPS) score assuming the code file provided contains your opponents shape and your shape for each game in the contest.](#puzzle-1-calculate-your-rock-paper-scissors-rps-score-assuming-the-code-file-provided-contains-your-opponents-shape-and-your-shape-for-each-game-in-the-contest)
     - [Puzzle-2: Calculate your RPS score assuming the code file provided contains your opponents shape and the required outcome for each game in the contest.](#puzzle-2-calculate-your-rps-score-assuming-the-code-file-provided-contains-your-opponents-shape-and-the-required-outcome-for-each-game-in-the-contest)
-  - [DAY-3](#day-3)
+  - [DAY-3: Rucksack Reorganisation](#day-3-rucksack-reorganisation)
     - [Puzzle-1: Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?](#puzzle-1-find-the-item-type-that-appears-in-both-compartments-of-each-rucksack-what-is-the-sum-of-the-priorities-of-those-item-types)
     - [Puzzle-2: Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?](#puzzle-2-find-the-item-type-that-corresponds-to-the-badges-of-each-three-elf-group-what-is-the-sum-of-the-priorities-of-those-item-types)
+  - [Day-4: Camp Cleanup](#day-4-camp-cleanup)
+    - [Puzzle-1: In how many assignment pairs does one range fully contain the other?](#puzzle-1-in-how-many-assignment-pairs-does-one-range-fully-contain-the-other)
+    - [Puzzle-2: In how many assignment pairs do the ranges overlap?](#puzzle-2-in-how-many-assignment-pairs-do-the-ranges-overlap)
 
 ---
 
-## DAY-1
+## DAY-1: Calorie Counting
 
 ### Puzzle-1: Elf with most food calories.
 
@@ -94,7 +97,7 @@ let d1p2Ans = top3.reduce(0) { $0 + $1.backpack.totalFoodCalories}
 
 ---
 
-## DAY-2
+## DAY-2: Rock Paper Scissors
 
 ### Puzzle-1: Calculate your ROCK-PAPER-SCISSORS (RPS) score assuming the code file provided contains your opponents shape and your shape for each game in the contest.
 
@@ -287,7 +290,7 @@ As before, step through the input file, create the rigged games and calculate th
 
 ---
 
-## DAY-3
+## DAY-3: Rucksack Reorganisation
 
 ### Puzzle-1: Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?
 
@@ -386,3 +389,98 @@ To find the common item with each group of three rucksacks,...
     groupPrioritySum += sB.first!.priority
   }
 ```
+
+---
+
+## Day-4: Camp Cleanup
+
+Summary of solution:
+
+- Process the input file line-by-line
+- Split each line at the comma to get two number pairs, "a-b" and "c-d"
+- Each number pair represents the start-end sections that each elf needs to clean
+- Use `ClosedRange()`'s built-in methods and a custom extension to determine the answers.
+
+### Puzzle-1: In how many assignment pairs does one range fully contain the other?
+
+Create some suitable structs for the assigned cleaning areas and the pairs of elves.  
+
+``` swift
+struct CleaningAssignment {
+  var section: ClosedRange<Int>
+}
+
+@available(macOS 13.0, *)
+extension CleaningAssignment {
+  func containsSections(for otherCleaningAssignment: CleaningAssignment) -> Bool {
+    return self.section.contains(otherCleaningAssignment.section)
+  }
+}
+
+struct CleaningPair {
+  var elf1: CleaningAssignment
+  var elf2: CleaningAssignment
+}
+```
+
+The `CleaningAssignment` struct stores the section start-end numbers as a `ClosedRange`, this seems a simple way to hold the pair of numbers.  The `CleaningAssingment` extension makes a call to `ClosedRange().contains` which is only supported on macOS v13 or later.
+
+Iterate through the input file and create the elf pairs and their assigned sections.
+
+``` swift
+for elfPairs in rawInput {
+  let sectionPair = elfPairs.components(separatedBy: ",")
+  let section1 = sectionPair[0].components(separatedBy: "-").compactMap { Int($0) }
+  let section2 = sectionPair[1].components(separatedBy: "-").compactMap { Int($0) }
+  
+  let area1 = CleaningAssignment(section: section1[0]...section1[1])
+  let area2 = CleaningAssignment(section: section2[0]...section2[1])
+      
+  cleaningTeam.append(CleaningPair(elf1: area1, elf2: area2))
+}
+```
+
+To determine the number of fully contained ranges use the `ClosedRange.contains` function, available with `ClosedRange` since macOS_13.0.
+
+``` swift
+var fullyContainedSections = 0
+for pair in cleaningTeam {
+  if (pair.elf1.containsSections(for: pair.elf2)) || (pair.elf2.containsSections(for: pair.elf1)) {
+    fullyContainedSections += 1
+  }
+}
+```
+
+### Puzzle-2: In how many assignment pairs do the ranges overlap?
+
+To find any overlapping regions in the assigned sections, extend `CleaningAssingment` to create an `overlaps` function.  Essentially, if any element in one set exists in the other set then there is an overlap.
+
+``` swift
+extension CleaningAssignment {
+  func containsSections(for otherCleaningAssignment: CleaningAssignment) -> Bool {
+    return self.section.contains(otherCleaningAssignment.section)
+  }
+  
+  func overlaps(with otherCleaningAssignment: CleaningAssignment) -> Bool {
+    return self.section.overlaps(otherCleaningAssignment.section)
+  }
+}
+```
+
+Now update the code where we process the input file to check for any overlaps...
+
+``` swift
+var fullyContainedSections = 0
+var overlappingSections = 0
+for pair in cleaningTeam {
+  if (pair.elf1.containsSections(for: pair.elf2)) || (pair.elf2.containsSections(for: pair.elf1)) {
+    fullyContainedSections += 1
+  }
+  
+  if pair.elf1.overlaps(with: pair.elf2) {
+    overlappingSections += 1
+  }
+}
+```
+
+---

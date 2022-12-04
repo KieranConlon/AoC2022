@@ -23,7 +23,8 @@ let package = Package(
       dependencies: [],
       resources: [.process("Resources/D1/inputD1.txt"),
                   .process("Resources/D2/inputD2.txt"),
-                  .process("Resources/D3/inputD3.txt")
+                  .process("Resources/D3/inputD3.txt"),
+                  .process("Resources/D4/inputD4.txt")
       ]
     ),
     .testTarget(
