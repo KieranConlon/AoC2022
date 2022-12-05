@@ -16,6 +16,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [Day-4: Camp Cleanup](#day-4-camp-cleanup)
     - [Puzzle-1: In how many assignment pairs does one range fully contain the other?](#puzzle-1-in-how-many-assignment-pairs-does-one-range-fully-contain-the-other)
     - [Puzzle-2: In how many assignment pairs do the ranges overlap?](#puzzle-2-in-how-many-assignment-pairs-do-the-ranges-overlap)
+  - [Day-5: Supply Stacks](#day-5-supply-stacks)
+    - [Puzzle-1: After the rearrangement procedure completes, what crate ends up on top of each stack?](#puzzle-1-after-the-rearrangement-procedure-completes-what-crate-ends-up-on-top-of-each-stack)
+    - [Puzzle-2: After the rearrangement procedure completes (with CrateMover9001), what crate ends up on top of each stack?](#puzzle-2-after-the-rearrangement-procedure-completes-with-cratemover9001-what-crate-ends-up-on-top-of-each-stack)
 
 ---
 
@@ -481,6 +484,287 @@ for pair in cleaningTeam {
     overlappingSections += 1
   }
 }
+```
+
+---
+
+## Day-5: Supply Stacks
+
+### Puzzle-1: After the rearrangement procedure completes, what crate ends up on top of each stack?
+
+Summary of solution:
+
+- Capture the initial (setup portion) of the input file manually (maybe as an extra bonus, I'll parse this part automatically)
+- Automatically process the file line-by-line, starting from line 11, where the movement entries start
+- Create a regex data capture to parse the crate movement data
+- Implement a simple `stack.remove` and `stack.add` methods to handle moving crates between stacks.
+
+Create suitable structs to represent a `CrateStack` and `ShipYard` objects.
+
+``` swift
+typealias Crate = Character
+
+struct CrateStack {
+  var crates = [Crate]()
+  
+  mutating func add(crate: Crate) {
+    crates.insert(crate, at: crates.startIndex)
+  }
+  
+  mutating func remove() -> Crate {
+    return crates.removeFirst()
+  }
+  
+  func getTop() -> Crate {
+    return crates.first ?? " "
+  }
+}
+
+struct ShipYard {
+  var crateStacks = [Int: CrateStack]()
+  
+  mutating func add(crate: Crate, toStack to: Int) {
+    self.crateStacks[to]!.add(crate: crate)
+  }
+  
+  mutating func remove(fromStack from: Int) -> Crate {
+    return self.crateStacks[from]!.remove()
+  }
+  
+  mutating func move(fromStack from: Int, toStack to: Int) -> Crate {
+    let c = self.remove(fromStack: from)
+    self.add(crate: c, toStack: to)
+    return c
+  }
+  
+  func getTopCrateOnStack(stack s: Int) -> Crate {
+    return self.crateStacks[s]!.getTop()
+  }
+  
+  func getTopCrates() -> [Crate] {
+    var c = [Crate]()
+    for s in 1...crateStacks.count {
+      c.append(getTopCrateOnStack(stack: s))
+    }
+    return c
+  }
+  
+  func maxStackHeight() -> (stack: Int, height: Int) {
+    var s = 0; var h = 0
+    for stack in crateStacks {
+      if stack.value.crates.count > h {
+        s = stack.key
+        h = stack.value.crates.count
+      }
+    }
+    return (s, h)
+  }
+  
+  init(withCrateStacks: [Int: [Crate]]) {
+    for s in withCrateStacks {
+      crateStacks[s.key] = CrateStack()
+      for c in s.value {
+        self.add(crate: c, toStack: s.key)
+      }
+    }
+  }
+}
+```
+
+`CrateStack` has functions `add(crate:)` and `remove() -> Crate` modify the crates in the stack; the basic premise for a crate stack is that crates are stacked FILO (first in, last out), also a function `getTop() -> Crate` find the crate on top of the stack.
+
+Similarly, `ShipYard` has add & remove along with a `move(fromStack:, toStack:) -> Crate` which calls both `add` and `remove` for the relevant stack.  Funcs to get top crate on a single stack or all stacks plus an `init(withCrateStacks: )` to preload the initial state of the shipyard stacks.
+
+The initial part of the input file has been parsed manually and captured as a constant dictionary ...
+
+``` swift
+let initialShipyardStacks: [Int: [Crate]] = [
+  1: ["Z", "J", "G"],
+  2: ["Q", "L", "R", "P", "W", "F", "V", "C"],
+  3: ["F", "P", "M", "C", "L", "G", "R"],
+  4: ["L", "F", "B", "W", "P", "H", "M"],
+  5: ["G", "C", "F", "S", "V", "Q"],
+  6: ["W", "H", "J", "Z", "M", "Q", "T", "L"],
+  7: ["H", "F", "S", "B", "V"],
+  8: ["F", "J", "Z", "S"],
+  9: ["M", "C", "D", "P", "F", "H", "B", "T"]
+]
+```
+
+> _**As a bonus exercise, I may return to this later to automate reading this data from the input file.**_
+
+Each movement entry in the input file needs to be parsed, I created a regex,`"move (?<numMove>\d{1,2}) from (?<fromStack>\d{1}) to (?<toStack>\d{1})"`, with named data captures `numMove`, `fromStack` and `toStack` to do this...
+
+``` swift
+func captureData(inputStr movements: String) -> [String: Int] {
+  let captureNames = ["numMove", "fromStack", "toStack"]
+  let regexPattern = #"move (?<numMove>\d{1,2}) from (?<fromStack>\d{1}) to (?<toStack>\d{1})"#
+  let regex = try! NSRegularExpression(pattern: regexPattern, options: [])
+
+  let range = NSRange(movements.startIndex..<movements.endIndex, in: movements)
+  let matches = regex.matches(in: movements, options: [], range: range)
+  guard let match = matches.first else {
+    print("RegEx match error on: \(movements)")
+    return [:]
+  }
+  var captures: [String: Int] = [:]
+  for name in captureNames {
+    let matchRange = match.range(withName: name)
+    if let substringRange = Range(matchRange, in: movements) {
+      let capture = String(movements[substringRange])
+      captures[name] = Int(capture)
+    }
+  }
+  return captures
+}
+```
+
+The function's return value will look like...
+
+``` swift
+[ "numMove"   : 1,
+  "fromStack" : 2,
+  "toStack"   : 5 ] 
+```
+
+Processing of the movement data is now quite straight forward.
+
+``` swift
+var shipyard = ShipYard(withCrateStacks: initialShipyardStacks)
+
+let maxStack = shipyard.maxStackHeight()
+var lineCount = 0
+let movementsStartLine = maxStack.height + 2  // Initial stack settings plus two throw-away lines
+var makeMovements = false
+
+for movements in rawInput {
+  lineCount += 1
+  makeMovements = lineCount > movementsStartLine ? true : false
+  
+  if makeMovements {
+    let captures = captureData(inputStr: movements)
+    
+    let _num  = captures["numMove"]!
+    let _from = captures["fromStack"]!
+    let _to   = captures["toStack"]!
+
+    for _ in 1..._num {
+      let _ = shipyard.move(fromStack: _from, toStack: _to)
+    }
+  }
+}
+
+let topCrates = String(shipyard.getTopCrates())
+```
+
+### Puzzle-2: After the rearrangement procedure completes (with CrateMover9001), what crate ends up on top of each stack?
+
+With the CrateMover crane being the 9001 model that can move multiples crates in a single move, whereas CrateMover 9000 could only move one crate at a time, an easy solution would be to inherit the behaviour of CrateMover9000 and add the multi-crate move function in a new 9001 version.
+
+To do this, I refactored my original `ShipYard` struct to become a class.  The only other change needed was to remove the `mutating` modifiers on some functions.
+
+``` swift
+class ShipYard {
+  var crateStacks = [Int: CrateStack]()
+  
+  func add(crate: Crate, toStack to: Int) {
+    self.crateStacks[to]!.add(crate: crate)
+  }
+  
+  func remove(fromStack from: Int) -> Crate {
+    return self.crateStacks[from]!.remove()
+  }
+  
+  func move(fromStack from: Int, toStack to: Int) -> Crate {
+    let c = self.remove(fromStack: from)
+    self.add(crate: c, toStack: to)
+    return c
+  }
+  
+  func getTopCrateOnStack(stack s: Int) -> Crate {
+    return self.crateStacks[s]!.getTop()
+  }
+  
+  func getTopCrates() -> [Crate] {
+    var c = [Crate]()
+    for s in 1...crateStacks.count {
+      c.append(getTopCrateOnStack(stack: s))
+    }
+    return c
+  }
+  
+  func maxStackHeight() -> (stack: Int, height: Int) {
+    var s = 0; var h = 0
+    for stack in crateStacks {
+      if stack.value.crates.count > h {
+        s = stack.key
+        h = stack.value.crates.count
+      }
+    }
+    return (s, h)
+  }
+  
+  init(withCrateStacks: [Int: [Crate]]) {
+    for s in withCrateStacks {
+      crateStacks[s.key] = CrateStack()
+      for c in s.value {
+        self.add(crate: c, toStack: s.key)
+      }
+    }
+  }
+}
+```
+
+Now we can create the `ShipYard9001` with a new `moveCrates(numCrates: fromStack: toStack: )` function as ...
+
+``` swift
+class ShipYard9001: ShipYard {
+  func moveCrates(numCrates: Int, fromStack: Int, toStack: Int) {
+    var crates = [Crate]()
+
+    for _ in 1...numCrates {
+      crates.insert(remove(fromStack: fromStack), at: crates.startIndex)
+    }
+
+    for c in crates {
+      add(crate: c, toStack: toStack)
+    }
+  }
+}
+```
+
+The main processing code now just needs three new lines of code to create the `Shipyard9001`, `moveCrates` and finally `getTopCrates` as stacked by Shipyard9001
+
+``` swift
+let shipyard = ShipYard(withCrateStacks: initialShipyardStacks)
+let shipyard9001 = ShipYard9001(withCrateStacks: initialShipyardStacks)
+
+let maxStack = shipyard.maxStackHeight()
+var lineCount = 0
+let movementsStartLine = maxStack.height + 2  // Initial stack settings plus two throw-away lines
+var makeMovements = false
+
+for movements in rawInput {
+  lineCount += 1
+  makeMovements = lineCount > movementsStartLine ? true : false
+  
+  if makeMovements {
+    let captures = captureData(inputStr: movements)
+    
+    let _num  = captures["numMove"]!
+    let _from = captures["fromStack"]!
+    let _to   = captures["toStack"]!
+
+    for _ in 1..._num {
+      let _ = shipyard.move(fromStack: _from, toStack: _to)
+    }
+    
+    shipyard9001.moveCrates(numCrates: _num, fromStack: _from, toStack: _to)
+  }
+}
+
+let topCrates = String(shipyard.getTopCrates())
+let topCrates9001 = String(shipyard9001.getTopCrates())
 ```
 
 ---
