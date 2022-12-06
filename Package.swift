@@ -25,7 +25,8 @@ let package = Package(
                   .process("Resources/D2/inputD2.txt"),
                   .process("Resources/D3/inputD3.txt"),
                   .process("Resources/D4/inputD4.txt"),
-                  .process("Resources/D5/inputD5.txt")
+                  .process("Resources/D5/inputD5.txt"),
+                  .process("Resources/D6/inputD6.txt")
       ]
     ),
     .testTarget(

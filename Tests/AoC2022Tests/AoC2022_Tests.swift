@@ -31,7 +31,8 @@ final class AoC2022_Tests: XCTestCase {
     2: "\(inputFilesPrefix)/D2/inputD2.txt",
     3: "\(inputFilesPrefix)/D3/inputD3.txt",
     4: "\(inputFilesPrefix)/D4/inputD4.txt",
-    5: "\(inputFilesPrefix)/D5/inputD5.txt"
+    5: "\(inputFilesPrefix)/D5/inputD5.txt",
+    6: "\(inputFilesPrefix)/D6/inputD6.txt"
   ]
   
   struct AoCTest {
@@ -97,6 +98,18 @@ final class AoC2022_Tests: XCTestCase {
                        q2: "After the rearrangement procedure completes (using CrateMover 9001), what crate ends up on top of each stack?")
     
     let ans = AoC2022_D5(inputFile: test.inputFile)
+    test.a1 = "\(ans.puzzle1)"
+    test.a2 = "\(ans.puzzle2)"
+    printAnswer(testData: test)
+  }
+  
+  func testAoC_D6() throws {
+    var test = AoCTest(dayNum: 6,
+                       daySubject: "Tuning Trouble",
+                       q1: "How many characters need to be processed before the first start-of-packet marker is detected?",
+                       q2: "How many characters need to be processed before the first start-of-message marker is detected?")
+    
+    let ans = AoC2022_D6(inputFile: test.inputFile)
     test.a1 = "\(ans.puzzle1)"
     test.a2 = "\(ans.puzzle2)"
     printAnswer(testData: test)

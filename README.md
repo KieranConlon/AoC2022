@@ -19,6 +19,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [Day-5: Supply Stacks](#day-5-supply-stacks)
     - [Puzzle-1: After the rearrangement procedure completes, what crate ends up on top of each stack?](#puzzle-1-after-the-rearrangement-procedure-completes-what-crate-ends-up-on-top-of-each-stack)
     - [Puzzle-2: After the rearrangement procedure completes (with CrateMover9001), what crate ends up on top of each stack?](#puzzle-2-after-the-rearrangement-procedure-completes-with-cratemover9001-what-crate-ends-up-on-top-of-each-stack)
+  - [Day-6: Tuning Trouble](#day-6-tuning-trouble)
+    - [Puzzle-1: How many characters need to be processed before the first start-of-packet marker is detected?](#puzzle-1-how-many-characters-need-to-be-processed-before-the-first-start-of-packet-marker-is-detected)
+    - [Puzzle-2: How many characters need to be processed before the first start-of-message marker is detected?](#puzzle-2-how-many-characters-need-to-be-processed-before-the-first-start-of-message-marker-is-detected)
 
 ---
 
@@ -765,6 +768,88 @@ for movements in rawInput {
 
 let topCrates = String(shipyard.getTopCrates())
 let topCrates9001 = String(shipyard9001.getTopCrates())
+```
+
+---
+
+## Day-6: Tuning Trouble
+
+### Puzzle-1: How many characters need to be processed before the first start-of-packet marker is detected?
+
+Summary of solution:
+
+- Read the entire content of the input file into a `String`
+- Iterate through the input 
+- Create `String.index` variables such that we have indeces to read sub-strings for the start-of-packet marker (len=4) and the start-of-message marker (len=14)
+- For each of the extracted sub-strings, create a `Set()`; if the `Set()`.count` equals the marker lengths then we have found a match.
+
+No special structs/classes required for this puzzle, just looping through the input.
+
+``` swift
+let startOfPacketMarkerLen = 4
+
+var markerFound = false
+var startOfPacketCount = startOfPacketMarkerLen - 1
+
+for i in 0..<rawInput.count {
+  let from = i
+  let toEndOfMarker = from + startOfPacketMarkerLen
+  
+  let start = rawInput.index(rawInput.startIndex, offsetBy: from, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
+  let endMarker = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMarker, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
+  
+  let marker = Set(rawInput[(start )..<endMarker])
+  
+  if !markerFound {
+    markerFound = (marker.count == startOfPacketMarkerLen)
+    startOfPacketCount += 1
+  }
+  
+  if markerFound { break }
+}
+
+return startOfPacketCount
+```
+
+### Puzzle-2: How many characters need to be processed before the first start-of-message marker is detected?
+
+We can take exactly the same approach and find the solution in parallel with the puzzle-1.  Updated code ...
+
+``` swift
+let startOfPacketMarkerLen = 4
+let startOfMessageMarkerLen = 14
+
+var markerFound = false
+var messageFound = false
+var startOfPacketCount = startOfPacketMarkerLen - 1
+var startOfMessageCount = startOfMessageMarkerLen - 1
+
+for i in 0..<rawInput.count {
+  let from = i
+  let toEndOfMarker = from + startOfPacketMarkerLen
+  let toEndOfMessage = from + startOfMessageMarkerLen
+  
+  let start = rawInput.index(rawInput.startIndex, offsetBy: from, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
+  let endMarker = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMarker, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
+  let endMessage = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMessage, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
+  
+  let marker = Set(rawInput[(start )..<endMarker])
+  let message = Set(rawInput[(start )..<endMessage])
+  
+  if !markerFound {
+    markerFound = (marker.count == startOfPacketMarkerLen)
+    startOfPacketCount += 1
+  }
+  
+  if !messageFound {
+    messageFound = (message.count == startOfMessageMarkerLen)
+    startOfMessageCount += 1
+  }
+  
+  if markerFound && messageFound { break }
+}
+
+return (startOfPacketCount,startOfMessageCount)
 ```
 
 ---
