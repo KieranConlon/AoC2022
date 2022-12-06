@@ -32,8 +32,8 @@ public func AoC2022_D6(inputFile: String) -> (puzzle1: Int, puzzle2: Int) {
     let endMarker = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMarker, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
     let endMessage = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMessage, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
     
-    let marker = Set(rawInput[(start )..<endMarker])
-    let message = Set(rawInput[(start )..<endMessage])
+    let marker = Set(rawInput[start..<endMarker])
+    let message = Set(rawInput[start..<endMessage])
     
     if !markerFound {
       markerFound = (marker.count == startOfPacketMarkerLen)
