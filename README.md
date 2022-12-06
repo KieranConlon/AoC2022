@@ -798,7 +798,7 @@ for i in 0..<rawInput.count {
   let start = rawInput.index(rawInput.startIndex, offsetBy: from, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
   let endMarker = rawInput.index(rawInput.startIndex, offsetBy: toEndOfMarker, limitedBy: rawInput.endIndex) ?? rawInput.endIndex
   
-  let marker = Set(rawInput[(start )..<endMarker])
+  let marker = Set(rawInput[start..<endMarker])
   
   if !markerFound {
     markerFound = (marker.count == startOfPacketMarkerLen)
