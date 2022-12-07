@@ -32,7 +32,8 @@ final class AoC2022_Tests: XCTestCase {
     3: "\(inputFilesPrefix)/D3/inputD3.txt",
     4: "\(inputFilesPrefix)/D4/inputD4.txt",
     5: "\(inputFilesPrefix)/D5/inputD5.txt",
-    6: "\(inputFilesPrefix)/D6/inputD6.txt"
+    6: "\(inputFilesPrefix)/D6/inputD6.txt",
+    7: "\(inputFilesPrefix)/D7/inputD7.txt"
   ]
   
   struct AoCTest {
@@ -114,5 +115,29 @@ final class AoC2022_Tests: XCTestCase {
     test.a2 = "\(ans.puzzle2)"
     printAnswer(testData: test)
   }
+  
+  func testAoC_D7() throws {
+    var test = AoCTest(dayNum: 7,
+                       daySubject: "No Space Left On Device",
+                       q1: "Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?",
+                       q2: "Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?")
+    
+    let ans = AoC2022_D7(inputFile: test.inputFile)
+    test.a1 = "\(ans.puzzle1)"
+    test.a2 = "\(ans.puzzle2)"
+    printAnswer(testData: test)
+  }
+  
+//  func testAoC_D0() throws {
+//    var test = AoCTest(dayNum: 0,
+//                       daySubject: "...",
+//                       q1: "...",
+//                       q2: "...")
+//
+//    let ans = AoC2022_D0(inputFile: test.inputFile)
+//    test.a1 = "\(ans.puzzle1)"
+//    test.a2 = "\(ans.puzzle2)"
+//    printAnswer(testData: test)
+//  }
 }
 

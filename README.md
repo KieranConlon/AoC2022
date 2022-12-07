@@ -22,6 +22,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [Day-6: Tuning Trouble](#day-6-tuning-trouble)
     - [Puzzle-1: How many characters need to be processed before the first start-of-packet marker is detected?](#puzzle-1-how-many-characters-need-to-be-processed-before-the-first-start-of-packet-marker-is-detected)
     - [Puzzle-2: How many characters need to be processed before the first start-of-message marker is detected?](#puzzle-2-how-many-characters-need-to-be-processed-before-the-first-start-of-message-marker-is-detected)
+  - [Day-7: No Space Left on Device](#day-7-no-space-left-on-device)
+    - [Puzzle-1: Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?](#puzzle-1-find-all-of-the-directories-with-a-total-size-of-at-most-100000-what-is-the-sum-of-the-total-sizes-of-those-directories)
+    - [Puzzle-2: Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?](#puzzle-2-find-the-smallest-directory-that-if-deleted-would-free-up-enough-space-on-the-filesystem-to-run-the-update-what-is-the-total-size-of-that-directory)
 
 ---
 
@@ -853,3 +856,177 @@ return (startOfPacketCount,startOfMessageCount)
 ```
 
 ---
+
+## Day-7: No Space Left on Device
+
+### Puzzle-1: Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?
+
+Summary of solution:
+
+- Read the input file, line by line, into a `[String]`
+- Iterate through the file
+- Interpret the commands and a structure to hold the required directories and files along with their names and sizes
+- Create some utility functions to (recursively) parse the data structure to find the sum size of all directories <= 100,000 bytes
+
+Create some classes to hold data for the files/directories. Using classes this time as I need to use the data by reference in order for my recursion to work.
+
+``` swift
+class File {
+  var name: String
+  var size: Int
+  
+  init(name: String, size: Int) {
+    self.name = name
+    self.size = size
+  }
+}
+
+class Directory {
+  var name: String
+  var files: [File] = [File]()
+  var subDirectories: [String: Directory] = [:]
+  var dirLevel: Int
+  var parent: Directory?
+  var size: Int {
+    get {
+      var sz = 0
+      for d in subDirectories {
+        sz += d.value.size
+      }
+      return files.reduce(0) { $0 + $1.size} + sz
+    }
+  }
+  
+  init(name: String, parent: Directory?) {
+    self.name = name
+    self.parent = parent ?? nil
+    self.dirLevel = (parent?.dirLevel ?? -1) + 1
+  }
+  
+  func addFile(name: String, size: Int) {
+    files.append(File(name: name, size: size))
+  }
+  
+  func addSubDirectory(name: String) {
+    subDirectories[name] = Directory(name: name, parent: self)
+  }
+  
+  func sumSmallDirs(szLim: Int) {
+    for d in subDirectories {
+      if d.value.size <= szLim {
+        dirSizeSum += d.value.size
+      }
+      d.value.sumSmallDirs(szLim: szLim)
+    }
+  }
+}
+
+class FileSystem {
+  var systemName: String = "Elf Comms 3000"
+  var tld = Directory(name: "/", parent: nil)
+  lazy var cwd: Directory = tld
+  
+  func cd(subDir: String) {
+    switch subDir {
+    case "/":
+      cwd = tld
+    case "..":
+      let tmp = cwd.parent!
+      cwd = tmp
+    default:
+      cwd = cwd.subDirectories[subDir]!
+    }
+  }
+  
+  func addFile(name: String, size: Int) {
+    cwd.addFile(name: name, size: size)
+  }
+  
+  func addSubDirectory(name: String) {
+    cwd.addSubDirectory(name: name)
+  }
+  
+  func sumSmallDirs(szLim: Int) {
+    tld.sumSmallDirs(szLim: szLim)
+  }
+}
+```
+
+The `File` class is self-explanatory; the `Directory` class itself contains a dictionary of subDirectories of type `Directory`.  This class stores the parent directory, this is useful later when having to navigate back up the directory tree when we have a `$ cd ..` command.
+
+The `FileSystem` class creates a top-level directory, `tld` with it's `parent` set to `nil`; we also maintain a record of the current working directory `cwd` which is used for our recursion functions.
+
+Simple utility functions to add files and directories are included, the `FileSystem` class also has a `cd` function to allow us to navigate the directory tree that we create.
+
+For the main processing loop...
+
+``` swift
+var dirSizeSum = 0
+
+let fs = FileSystem()
+
+for cmd in rawInput {
+  let cmdArgs = cmd.components(separatedBy: " ")
+  
+  switch cmdArgs[0] {
+  case "$":
+    if (cmdArgs[1] == "cd") && (cmdArgs[2] != "/") {
+      fs.cd(subDir: cmdArgs[2])
+    }
+  case "dir":
+    fs.cwd.addSubDirectory(name: cmdArgs[1])
+  default:
+    fs.cwd.addFile(name: cmdArgs[1], size: Int(cmdArgs[0])!)
+  }
+}
+
+// this will modify the global var dirSizeSum
+fs.sumSmallDirs(szLim: 100_000)
+
+return dirSizeSum
+
+```
+
+### Puzzle-2: Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?
+
+Adding a `tree()` function to the `Directory` class will iterate through every directory / sub-directory, the size of each directory will be checked and the appropriate value stored in a global variable.  Additions to classes...
+
+For `FileSystem`
+
+``` swift
+class FileSystem {
+
+...
+
+  func tree()  {
+    tld.tree()
+  }
+}
+```
+
+For `Directory`, this will also print the directory structure to the console.
+
+``` swift
+// Global variables
+var minSpaceToClear = 0
+let hddSize = 70_000_000
+var deletedDirSize = hddSize
+
+class Directory {
+
+...
+
+  func tree() {
+    let padding = String(repeating: "  ", count: self.dirLevel)
+    print("\(padding)- \(name) (dir, \(size))")
+    
+    if size > minSpaceToClear && size < deletedDirSize {
+      deletedDirSize = size
+    }
+    
+    for d in subDirectories {
+      d.value.tree()
+    }
+  }
+}
+```
