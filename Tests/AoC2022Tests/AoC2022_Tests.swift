@@ -33,7 +33,8 @@ final class AoC2022_Tests: XCTestCase {
     4: "\(inputFilesPrefix)/D4/inputD4.txt",
     5: "\(inputFilesPrefix)/D5/inputD5.txt",
     6: "\(inputFilesPrefix)/D6/inputD6.txt",
-    7: "\(inputFilesPrefix)/D7/inputD7.txt"
+    7: "\(inputFilesPrefix)/D7/inputD7.txt",
+    8: "\(inputFilesPrefix)/D8/inputD8.txt"
   ]
   
   struct AoCTest {
@@ -128,16 +129,29 @@ final class AoC2022_Tests: XCTestCase {
     printAnswer(testData: test)
   }
   
-//  func testAoC_D0() throws {
-//    var test = AoCTest(dayNum: 0,
-//                       daySubject: "...",
-//                       q1: "...",
-//                       q2: "...")
-//
-//    let ans = AoC2022_D0(inputFile: test.inputFile)
-//    test.a1 = "\(ans.puzzle1)"
-//    test.a2 = "\(ans.puzzle2)"
-//    printAnswer(testData: test)
-//  }
+  func testAoC_D8() throws {
+    var test = AoCTest(dayNum: 8,
+                       daySubject: "Treetop Tree House",
+                       q1: "How many trees are visible from outside the grid?",
+                       q2: "What is the highest scenic score possible for any tree?")
+
+    let ans = AoC2022_D8(inputFile: test.inputFile)
+    test.a1 = "\(ans.puzzle1)"
+    test.a2 = "\(ans.puzzle2)"
+    printAnswer(testData: test)
+  }
+  
+  //  func testAoC_D0() throws {
+  //    var test = AoCTest(dayNum: 0,
+  //                       daySubject: "...",
+  //                       q1: "...",
+  //                       q2: "...")
+  //
+  //    let ans = AoC2022_D0(inputFile: test.inputFile)
+  //    test.a1 = "\(ans.puzzle1)"
+  //    test.a2 = "\(ans.puzzle2)"
+  //    printAnswer(testData: test)
+  //  }
+  
 }
 

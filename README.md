@@ -25,6 +25,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [Day-7: No Space Left on Device](#day-7-no-space-left-on-device)
     - [Puzzle-1: Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?](#puzzle-1-find-all-of-the-directories-with-a-total-size-of-at-most-100000-what-is-the-sum-of-the-total-sizes-of-those-directories)
     - [Puzzle-2: Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?](#puzzle-2-find-the-smallest-directory-that-if-deleted-would-free-up-enough-space-on-the-filesystem-to-run-the-update-what-is-the-total-size-of-that-directory)
+  - [Day-8: Treetop Tree House](#day-8-treetop-tree-house)
+    - [Puzzle-1: How many trees are visible from outside the grid?](#puzzle-1-how-many-trees-are-visible-from-outside-the-grid)
+    - [Puzzle-2: What is the highest scenic score possible for any tree?](#puzzle-2-what-is-the-highest-scenic-score-possible-for-any-tree)
 
 ---
 
@@ -1030,3 +1033,137 @@ class Directory {
   }
 }
 ```
+
+---
+
+## Day-8: Treetop Tree House
+
+### Puzzle-1: How many trees are visible from outside the grid?
+
+Summary of solution:
+
+- Read the input file, line by line, into a `[String]`
+- Iterate through the `[String]` array, extracting the data values in `[Int]` amd creating a 2-D `[Int]` array
+- Determine the visibility of each tree, from each side on the forest.  My method is just brute force, reading the data in four stages; W->E, E->W, N->S then S->N.
+
+Create some structs to hold our data...
+
+``` swift
+struct Tree {
+  var h: Int
+  var visibleFromN: Bool = false
+  var visibleFromS: Bool = false
+  var visibleFromW: Bool = false
+  var visibleFromE: Bool = false
+  var isVisible: Bool {
+    get { self.visibleFromN || self.visibleFromS || self.visibleFromW || self.visibleFromE }
+  }
+}
+
+struct Forest {
+  var treeArray = [[Tree]]()
+
+  var visibleCount: Int {
+    get {
+      var c = 0
+      for row in self.treeArray {
+        c += row.reduce(0) { $0 + ($1.isVisible ? 1 : 0)}
+      }
+      return c
+    }
+  }
+}
+```
+
+Calculating the visibility is a brute force check in four directions.  A tree is visible if it is higher than the trees tested earlier in the loop.  Loop when looking from the west side shown.
+
+``` swift
+  for row in 0..<forest.treeArray.count {
+    var maxHeight = -1
+    for col in 0..<forest.treeArray[row].count {
+      if forest.treeArray[row][col].h > maxHeight {
+        forest.treeArray[row][col].visibleFromW = true
+        maxHeight = forest.treeArray[row][col].h
+      }
+    }
+  }
+```
+
+The variable `Forest.visibleCount` counts the visible trees.
+
+### Puzzle-2: What is the highest scenic score possible for any tree?
+
+This will also be a brute force method, although I have included an early exit from the procesing loop as soon as the view from the tree is blocked.
+
+Update the `Tree` struct to hold the 'view from the tree' information.
+
+``` swift
+struct Tree {
+  ...
+  
+  var viewN: Int = 0
+  var viewS: Int = 0
+  var viewW: Int = 0
+  var viewE: Int = 0
+  var scenicScore: Int {
+    get { viewN * viewS * viewW * viewE }
+  }
+}
+```
+
+Similarly, update the `Forest` struct to calculate the scenic score.
+
+``` swift
+struct Forest {
+  ...
+  
+  var scenicScore: Int {
+    get {
+      var v = 0
+      for row in self.treeArray {
+        for col in row {
+          v = (col.scenicScore > v) ? col.scenicScore : v
+        }
+      }
+      return v
+    }
+  }
+}
+```
+
+In the main processing loop, the brute force method checks the distance from each tree to other trees in four directions (N, S, E & W), distance to the first 'blocking' tree (or the edge of the forest) is recorded.
+
+``` swift
+  let totalRows = forest.treeArray.count
+  for row in 0..<totalRows {
+    let totalCols = forest.treeArray[row].count
+    for col in 0..<totalCols {
+      let extentW = col
+      let extentE = (totalCols - col) - 1
+      let extentN = row
+      let extentS = (totalRows - row) - 1
+      
+      let myHeight = forest.treeArray[row][col].h
+      
+      var dist = 0
+      var blocked = false
+      for dc in 0..<extentW {
+        dist += 1
+        let treeHeight = forest.treeArray[row][col - dc - 1].h
+        if !blocked {
+          blocked = (myHeight <= treeHeight)
+        }
+        if blocked { break }
+      }
+      forest.treeArray[row][col].viewW = dist
+
+      /*
+      other directions E, N and S not shown
+      */
+    }
+  }
+```
+
+The solution is stored in `Forest.scenicScore`.
+
+---
