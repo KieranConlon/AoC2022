@@ -34,7 +34,8 @@ final class AoC2022_Tests: XCTestCase {
     5: "\(inputFilesPrefix)/D5/inputD5.txt",
     6: "\(inputFilesPrefix)/D6/inputD6.txt",
     7: "\(inputFilesPrefix)/D7/inputD7.txt",
-    8: "\(inputFilesPrefix)/D8/inputD8.txt"
+    8: "\(inputFilesPrefix)/D8/inputD8.txt",
+    9: "\(inputFilesPrefix)/D9/inputD9.txt"
   ]
   
   struct AoCTest {
@@ -141,17 +142,29 @@ final class AoC2022_Tests: XCTestCase {
     printAnswer(testData: test)
   }
   
-  //  func testAoC_D0() throws {
-  //    var test = AoCTest(dayNum: 0,
-  //                       daySubject: "...",
-  //                       q1: "...",
-  //                       q2: "...")
-  //
-  //    let ans = AoC2022_D0(inputFile: test.inputFile)
-  //    test.a1 = "\(ans.puzzle1)"
-  //    test.a2 = "\(ans.puzzle2)"
-  //    printAnswer(testData: test)
-  //  }
+  func testAoC_D9() throws {
+    var test = AoCTest(dayNum: 9,
+                       daySubject: "...",
+                       q1: "...",
+                       q2: "...")
+
+    let ans = AoC2022_D9(inputFile: test.inputFile)
+    test.a1 = "\(ans.puzzle1)"
+    test.a2 = "\(ans.puzzle2)"
+    printAnswer(testData: test)
+  }
+  
+//  func testAoC_D0() throws {
+//    var test = AoCTest(dayNum: 0,
+//                       daySubject: "...",
+//                       q1: "...",
+//                       q2: "...")
+//
+//    let ans = AoC2022_D0(inputFile: test.inputFile)
+//    test.a1 = "\(ans.puzzle1)"
+//    test.a2 = "\(ans.puzzle2)"
+//    printAnswer(testData: test)
+//  }
   
 }
 

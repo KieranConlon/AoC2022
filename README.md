@@ -28,6 +28,9 @@ My code solutions for [Advent of Code 2022](https://adventofcode.com/)
   - [Day-8: Treetop Tree House](#day-8-treetop-tree-house)
     - [Puzzle-1: How many trees are visible from outside the grid?](#puzzle-1-how-many-trees-are-visible-from-outside-the-grid)
     - [Puzzle-2: What is the highest scenic score possible for any tree?](#puzzle-2-what-is-the-highest-scenic-score-possible-for-any-tree)
+  - [Day-9: Rope Bridge](#day-9-rope-bridge)
+    - [Puzzle-1: How many positions does the tail of the rope visit at least once?](#puzzle-1-how-many-positions-does-the-tail-of-the-rope-visit-at-least-once)
+    - [Puzzle-2: Simulate your complete series of motions on a larger rope with ten knots. How many positions does the tail of the rope visit at least once?](#puzzle-2-simulate-your-complete-series-of-motions-on-a-larger-rope-with-ten-knots-how-many-positions-does-the-tail-of-the-rope-visit-at-least-once)
 
 ---
 
@@ -1165,5 +1168,219 @@ In the main processing loop, the brute force method checks the distance from eac
 ```
 
 The solution is stored in `Forest.scenicScore`.
+
+---
+
+## Day-9: Rope Bridge
+
+Summary of solution:
+
+- Read the input file line-by-line, extract the head movements
+- Create a rope object to handle a `moveHead` instruction
+- The rope needs a `head` and a `tail`, for each move of `head` determine and perform any required movement for `tail`
+- In a little pre-empt of puzzle-2, I am guessing that the rope will stretch such that the tail will only move after the dist from `tail` -> `head` exceeds some value.
+
+### Puzzle-1: How many positions does the tail of the rope visit at least once?
+The tail knot will move U, D, L & R following the head; but if the head moves into a position on a diagonal from the tail, then the tail does not move.  e.g when the head is at a location (x: +1, y: +1) from the tail.  This suggests the rope is 'elastic', so the tail will only move if the distance from tail->head is greater than sqrt( 1^2 + 1^2) = 1.414 
+
+Create a `Coord` struct to hold basic position information.  We are going to store every location visited by the tail in a `Set`, so make this `Hashable` to support that.
+
+``` swift
+struct Coord: Hashable {
+  var x: Int
+  var y: Int
+}
+```
+
+For the `Knot`, we need to save the position and have some helper functions to calculate the distance to another knot (e.g. from `tail` -> `head`) and calculate the new position of the `tail` when the `head` moves.
+
+``` swift
+struct Knot {
+  var coord: Coord
+  var x: Int { get { return self.coord.x } }
+  var y: Int { get { return self.coord.y } }
+
+  init(x: Int, y: Int) {
+    self.coord = Coord(x: x, y: y)
+  }
+  
+  func dist(to: Knot) -> Double {
+    return sqrt( pow(Double(self.x - to.x), 2) + pow(Double(self.y - to.y), 2) )
+  }
+  
+  mutating func moveTowards(other: Knot, elasticLim: Double) {
+    if self.dist(to: other) > elasticLim {
+      self.coord.x += (1 * (other.x - self.coord.x).signum())
+      self.coord.y += (1 * (other.y - self.coord.y).signum())
+    }
+  }
+}
+```
+
+The `moveTowards` function uses `signum()`; this is a quick way to evaluate if dx or dy is zero, +ve, or -ve allowing us to move the know on the diagonal if required.
+
+For the `Rope`...
+
+``` swift
+struct Rope {
+  var head = Knot(x: 0, y: 0)
+  var tail = Knot(x: 0, y: 0)
+  
+  var tailLocations = Set<Coord>()
+  
+  let maxSeparationSquares: Int
+  var permittedElasticDist: Double {
+    get {
+      return self.tail.dist(to: Knot(x: self.tail.x + maxSeparationSquares, y: self.tail.y + maxSeparationSquares))
+    }
+  }
+  
+  init(maxSeparationSquares: Int) {
+    self.maxSeparationSquares = maxSeparationSquares
+    self.tailLocations.insert(self.tail.coord)
+  }
+  
+  mutating func moveHead(direction: String) {
+    switch direction {
+    case "L":
+      self.head.coord.x -= 1
+    case "R":
+      self.head.coord.x += 1
+    case "U":
+      self.head.coord.y += 1
+    case "D":
+      self.head.coord.y -= 1
+    default :
+      break
+    }
+    
+    tail.moveTowards(other: head, elasticLim: permittedElasticDist)
+    tailLocations.insert(tail.coord)
+  }
+}
+```
+
+Variables for `head` and `tail` knots and a `Set` to store the locations visited by the `tail`.  The initialiser is given a property that defines our rope's elasticity.
+
+The `moveHead` functions updates the `head` coords and then instructs the `tail` to `moveTowards` it.
+
+For the processing loop, just iterate through the file and send the `movehead` instructions.
+
+``` swift
+var rope = Rope(maxSeparationSquares: 1)
+for row in rawInput {
+  let instruction = row.components(separatedBy: " ")
+  let reps = Int(instruction[1])!
+  for _ in 0..<reps {
+    rope.moveHead(direction: instruction[0])
+  }
+}
+
+let ans1 = rope.tailLocations.count
+```
+
+### Puzzle-2: Simulate your complete series of motions on a larger rope with ten knots. How many positions does the tail of the rope visit at least once?
+
+> So my guess was wrong, the rope now has more knots!
+
+Luckily, not too much refactoring to find the solution.
+
+First, change my `Knot` struct to make it a class (now called `ChainKnot`) the creat a reference to the previous `Knot` up the chain.  For the purpose of the test, I have created this as a seperate class so that I can re-run puzzle-1 if needed.
+
+``` swift
+class ChainKnot {
+  var coord: Coord
+  var x: Int { get { return self.coord.x } }
+  var y: Int { get { return self.coord.y } }
+  
+  var leadKnot: ChainKnot?
+
+  init(x: Int, y: Int, leadKnot: ChainKnot? = nil) {
+    self.coord = Coord(x: x, y: y)
+  }
+  
+  func dist(to: ChainKnot) -> Double {
+    return sqrt( pow(Double(self.x - to.x), 2) + pow(Double(self.y - to.y), 2) )
+  }
+  
+  func moveTowards(other: ChainKnot, elasticLim: Double) {
+    if self.dist(to: other) > elasticLim {
+      self.coord.x += (1 * (other.x - self.coord.x).signum())
+      self.coord.y += (1 * (other.y - self.coord.y).signum())
+    }
+  }
+}
+```
+
+The new `Rope` struct (now called `LongRope`) replaces the `head` and `tail` variables with a new `knots: [ChainKnot]`.  The `init` and `moveHead` functions have been updated so that the knot chain is iterated .
+
+``` swift
+struct LongRope {
+  private var head: ChainKnot {
+    get {
+      return knots[0]
+    }
+  }
+  
+  var knots = [ChainKnot]()
+  
+  var tailLocations = Set<Coord>()
+  
+  let maxSeparationSquares: Int
+  var permittedElasticDist: Double {
+    get {
+      return self.knots[0].dist(to: ChainKnot(x: self.knots[0].x + maxSeparationSquares, y: self.knots[0].y + maxSeparationSquares))
+    }
+  }
+  
+  init(maxSeparationSquares: Int, numKnots: Int) {
+    self.maxSeparationSquares = maxSeparationSquares
+    
+    for i in 0..<numKnots {
+      if i == 0 {
+        knots.append(ChainKnot(x: 0, y: 0, leadKnot: nil))
+      } else {
+        knots.append(ChainKnot(x: 0, y: 0, leadKnot: knots[i-1]))
+      }
+    }
+    self.tailLocations.insert(knots[knots.endIndex-1].coord)
+
+  }
+  
+  mutating func moveHead(direction: String) {
+    switch direction {
+    case "L":
+      self.head.coord.x -= 1
+    case "R":
+      self.head.coord.x += 1
+    case "U":
+      self.head.coord.y += 1
+    case "D":
+      self.head.coord.y -= 1
+    default :
+      break
+    }
+    
+    for i in 1..<knots.count {
+      knots[i].moveTowards(other: knots[i-1], elasticLim: permittedElasticDist)
+    }
+    tailLocations.insert(knots[knots.endIndex-1].coord)
+  }
+}
+```
+
+The main processing loop is very similar, we just need to `init` the `LongRope` with the correct number of knots.
+
+``` swift
+  var longRope = LongRope(maxSeparationSquares: 1, numKnots: 10)
+  for row in rawInput {
+    let instruction = row.components(separatedBy: " ")
+    let reps = Int(instruction[1])!
+    for _ in 0..<reps {
+      longRope.moveHead(direction: instruction[0])
+    }
+  }
+  let ans2 = longRope.tailLocations.count
+```
 
 ---
