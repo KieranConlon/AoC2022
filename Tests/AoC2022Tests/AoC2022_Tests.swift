@@ -2,23 +2,21 @@ import XCTest
 @testable import AoC2022
 
 final class AoC2022_Tests: XCTestCase {
-  
-  let adventName = "AoC2022"
-  
+    
   private func printAnswer(day: Int, dayName: String, q1: String = "", a1: String = "", q2: String = "", a2: String = "") {
     print(
-    """
-    >
-      \(adventName) Day-\(day): \(dayName)
-      Puzzle-1:
-         Q: \(q1)
-         A: \(a1)
-    
-      Puzzle-2:
-         Q: \(q2)
-         A: \(a2)
-    ------
-    """)
+        """
+        >
+        AoC2022 Day-\(day): \(dayName)
+        Puzzle-1:
+        Q: \(q1)
+        A: \(a1)
+        
+        Puzzle-2:
+        Q: \(q2)
+        A: \(a2)
+        ------
+        """)
   }
   
   private func printAnswer(testData: AoCTest) {
@@ -35,7 +33,9 @@ final class AoC2022_Tests: XCTestCase {
     6: "\(inputFilesPrefix)/D6/inputD6.txt",
     7: "\(inputFilesPrefix)/D7/inputD7.txt",
     8: "\(inputFilesPrefix)/D8/inputD8.txt",
-    9: "\(inputFilesPrefix)/D9/inputD9.txt"
+    9: "\(inputFilesPrefix)/D9/inputD9.txt",
+    10: "\(inputFilesPrefix)/D10/inputD10.txt",
+    11: "\(inputFilesPrefix)/D11/inputD11.txt"
   ]
   
   struct AoCTest {
@@ -135,7 +135,7 @@ final class AoC2022_Tests: XCTestCase {
                        daySubject: "Treetop Tree House",
                        q1: "How many trees are visible from outside the grid?",
                        q2: "What is the highest scenic score possible for any tree?")
-
+    
     let ans = AoC2022_D8(inputFile: test.inputFile)
     test.a1 = "\(ans.puzzle1)"
     test.a2 = "\(ans.puzzle2)"
@@ -143,28 +143,55 @@ final class AoC2022_Tests: XCTestCase {
   }
   
   func testAoC_D9() throws {
-    var test = AoCTest(dayNum: 9,
-                       daySubject: "...",
-                       q1: "...",
-                       q2: "...")
 
+    var test = AoCTest(dayNum: 9,
+                       daySubject: "Rope Bridge",
+                       q1: "Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?",
+                       q2: "Simulate your complete series of motions on a larger rope with ten knots. How many positions does the tail of the rope visit at least once?")
+    
     let ans = AoC2022_D9(inputFile: test.inputFile)
+
     test.a1 = "\(ans.puzzle1)"
     test.a2 = "\(ans.puzzle2)"
+
     printAnswer(testData: test)
   }
   
-//  func testAoC_D0() throws {
-//    var test = AoCTest(dayNum: 0,
-//                       daySubject: "...",
-//                       q1: "...",
-//                       q2: "...")
-//
-//    let ans = AoC2022_D0(inputFile: test.inputFile)
-//    test.a1 = "\(ans.puzzle1)"
-//    test.a2 = "\(ans.puzzle2)"
-//    printAnswer(testData: test)
-//  }
+    func testAoC_D10() throws {
+      var test = AoCTest(dayNum: 10,
+                         daySubject: "Cathode-Ray Tube",
+                         q1: "Find the signal strength during the 20th, 60th, 100th, 140th, 180th, and 220th cycles. What is the sum of these six signal strengths?",
+                         q2: "Render the image given by your program. What eight capital letters appear on your CRT?")
+  
+      let ans = AoC2022_D10(inputFile: test.inputFile)
+      test.a1 = "\(ans.puzzle1)"
+      test.a2 = "\(ans.puzzle2)"
+      printAnswer(testData: test)
+    }
+  
+    func testAoC_D11() throws {
+      var test = AoCTest(dayNum: 11,
+                         daySubject: "Monkey in the Middle",
+                         q1: "Figure out which monkeys to chase by counting how many items they inspect over 20 rounds. What is the level of monkey business after 20 rounds of stuff-slinging simian shenanigans?",
+                         q2: "...")
+  
+      let ans = AoC2022_D11(inputFile: test.inputFile)
+      test.a1 = "\(ans.puzzle1)"
+      test.a2 = "\(ans.puzzle2)"
+      printAnswer(testData: test)
+    }
+  
+  //  func testAoC_D0() throws {
+  //    var test = AoCTest(dayNum: 0,
+  //                       daySubject: "...",
+  //                       q1: "...",
+  //                       q2: "...")
+  //
+  //    let ans = AoC2022_D0(inputFile: test.inputFile)
+  //    test.a1 = "\(ans.puzzle1)"
+  //    test.a2 = "\(ans.puzzle2)"
+  //    printAnswer(testData: test)
+  //  }
   
 }
 
