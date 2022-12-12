@@ -154,6 +154,7 @@ public func AoC2022_D9(inputFile: String) -> (puzzle1: Int, puzzle2: Int) {
     print(error.localizedDescription)
   }
   
+  var t_start = DispatchTime.now().uptimeNanoseconds
   var rope = Rope(maxSeparationSquares: 1)
   for row in rawInput {
     let instruction = row.components(separatedBy: " ")
@@ -163,7 +164,11 @@ public func AoC2022_D9(inputFile: String) -> (puzzle1: Int, puzzle2: Int) {
     }
   }
   let ans1 = rope.tailLocations.count
+  var t_duration = (DispatchTime.now().uptimeNanoseconds - t_start) / 1_000_000
+  print("Pt1 took: \(t_duration) ms")
   
+  
+  t_start = DispatchTime.now().uptimeNanoseconds
   var longRope = LongRope(maxSeparationSquares: 1, numKnots: 10)
   for row in rawInput {
     let instruction = row.components(separatedBy: " ")
@@ -173,6 +178,8 @@ public func AoC2022_D9(inputFile: String) -> (puzzle1: Int, puzzle2: Int) {
     }
   }
   let ans2 = longRope.tailLocations.count
-  
+  t_duration = (DispatchTime.now().uptimeNanoseconds - t_start) / 1_000_000
+  print("Pt2 took: \(t_duration) ms")
+
   return (ans1, ans2)
 }
